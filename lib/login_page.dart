@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:kyub/confirm_ticket.dart';
+import 'package:kyub/services/api_service.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'data/Json_user.dart';
 
@@ -15,46 +14,12 @@ class LoginPage extends StatefulWidget {
 }
 
 class _MyLoginPageState extends State<LoginPage> {
-  static var uri = "https://thekyub.azurewebsites.net/";
-  static BaseOptions options = BaseOptions(
-      baseUrl: uri,
-      responseType: ResponseType.plain,
-      connectTimeout: 30000,
-      receiveTimeout: 30000,
-      validateStatus: (code) {
-        if (code >= 200) {
-          return true;
-        }
-      });
-  static Dio dio = Dio(options);
   final _formKey = GlobalKey<FormState>();
   String _password;
   String _email;
   bool _isLoading = false;
 
-  Future<dynamic> _loginUser(String email, String password) async {
-    try {
-      Options options = Options(
-        contentType: ContentType.parse('application/json').toString(),
-      );
-
-      Response response = await dio.post('/api/Tickets/Authenticate',
-          data: {"username": email, "password": password}, options: options);
-
-      return response;
-    } on DioError catch (exception) {
-      if (exception == null ||
-          exception.toString().contains('SocketException')) {
-        throw Exception("Network Error");
-      } else if (exception.type == DioErrorType.RECEIVE_TIMEOUT ||
-          exception.type == DioErrorType.CONNECT_TIMEOUT) {
-        throw Exception(
-            "Could'nt connect, please ensure you have a stable network.");
-      } else {
-        return null;
-      }
-    }
-  }
+  
 
   TextStyle style = TextStyle(fontFamily: 'Montserrat', fontSize: 20.0);
   var radius = 32.0;
@@ -101,12 +66,14 @@ class _MyLoginPageState extends State<LoginPage> {
           minWidth: MediaQuery.of(context).size.width,
           padding: EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
           onPressed: () async {
+           var s = new Service();
+           // s.getuser(_email, _password);
             // save the fields..
             final form = _formKey.currentState;
             form.save();
             if (form.validate()) {
               setState(() => _isLoading = true);
-              var res = await _loginUser(_email, _password);
+              var res = await s.getuser(_email, _password);
               var responseJson = json.decode(res.data);
               if (res.statusCode == 200 || res.statusCode == 201) {
                 setState(() => _isLoading = false);
@@ -200,9 +167,7 @@ class _MyLoginPageState extends State<LoginPage> {
             padding: const EdgeInsets.all(36.0),
             child: Form(
               key: _formKey,
-              child: _isLoading
-                  ? LoadingCircle()
-                  : Column(
+              child:Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
@@ -219,7 +184,7 @@ class _MyLoginPageState extends State<LoginPage> {
                         SizedBox(
                           height: 10.0,
                         ),
-                        loginButton,
+                        _isLoading ? LoadingCircle() : loginButton,
                       ],
                     ),
             ),

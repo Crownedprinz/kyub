@@ -1,8 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:kyub/services/api_service.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 import 'data/Json_user.dart';
@@ -14,43 +12,10 @@ class ConfirmPage extends StatefulWidget {
 }
 
 class _HomePageState extends State<ConfirmPage> {
-  static var uri = "https://thekyub.azurewebsites.net/";
-  static BaseOptions options = BaseOptions(
-      baseUrl: uri,
-      responseType: ResponseType.plain,
-      connectTimeout: 30000,
-      receiveTimeout: 30000,
-      validateStatus: (code) {
-        if (code >= 200) {
-          return true;
-        }
-      });
-  static Dio dio = Dio(options);
   final _formKey = GlobalKey<FormState>();
   String _ticket;
   bool _isLoading = false;
-  Future<dynamic> _confirmTicket(String ticket) async {
-    try {
-      Options options = Options(
-        contentType: ContentType.parse('application/json').toString(),
-      );
-
-      Response response = await dio.get('/api/Tickets/Confirm?ticket=$_ticket',
-          options: options);
-      return response;
-    } on DioError catch (exception) {
-      if (exception == null ||
-          exception.toString().contains('SocketException')) {
-        throw Exception("Network Error");
-      } else if (exception.type == DioErrorType.RECEIVE_TIMEOUT ||
-          exception.type == DioErrorType.CONNECT_TIMEOUT) {
-        throw Exception(
-            "Could'nt connect, please ensure you have a stable network.");
-      } else {
-        return null;
-      }
-    }
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -87,11 +52,12 @@ class _HomePageState extends State<ConfirmPage> {
           ),
           color: Colors.lime,
           onPressed: () async {
+            var s = new Service();
             final form = _formKey.currentState;
             form.save();
             if (form.validate()) {
               setState(() => _isLoading = true);
-              var res = await _confirmTicket(_ticket);
+              var res = await s.confirmTicket(_ticket);
 
               var responseJson = json.decode(res.data);
               
