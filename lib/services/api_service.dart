@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 class Service {
   static Dio _dio;
   static Service service;
-  static const uri = "https://thekyub.azurewebsites.net/";
+  static const uri = "https://thekyub.com/";
 
   Service() {
       BaseOptions options = BaseOptions(
